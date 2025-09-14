@@ -1,7 +1,6 @@
 import { finalizationRegistry } from "../gc";
 import { registerHandler } from "../handler";
-import { createLuaObject, interopType, objects, wrappers } from "../object";
-import { randomString } from "../util";
+import { createLuaObject, interopType, objects, uniqueId, wrappers } from "../object";
 
 const handler: Handler = {
     priority: 200,
@@ -19,7 +18,7 @@ const handler: Handler = {
         }
 
         // A Javascript object, wrap it as opaque
-        const id = randomString(10);
+        const id = uniqueId();
         objects[id] = obj as object;
         return createLuaObject("opaque", { id });
     }

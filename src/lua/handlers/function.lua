@@ -13,7 +13,17 @@ function HANDLER:From(obj)
             local ptbl = {}
             local func = function(...)
                 local p = ptbl -- Hack for function GC
-                Interop:RunJavascriptFunction("_interop_js_.call", obj.id, ...)
+                local promise, resolve, reject = Interop:CreatePromise()
+                local callId = Interop:UniqueID()
+                Interop.m_ReturnCallbacks[callId] = function(success, result)
+                    if success then
+                        resolve(result)
+                    else
+                        reject(result)
+                    end
+                end
+                Interop:RunJavascriptFunction("_interop_js_.call", obj.id, callId, ...)
+                return promise
             end
             Interop:ListenForGC(ptbl, function()
                 Interop:Collect(id)

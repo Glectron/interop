@@ -1,5 +1,7 @@
 export const handlers: Handler[] = [];
 
+export const callbacks: Record<string, (success: boolean, result: unknown) => void> = {};
+
 export function registerHandler(handler: Handler) {
     handlers.push(handler);
     handlers.sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0));

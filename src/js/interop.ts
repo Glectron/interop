@@ -1,5 +1,5 @@
-import { fromLua, toLua, registerHandler } from "./handler";
-import { objects } from "./object";
+import { fromLua, toLua, registerHandler, callbacks } from "./handler";
+import { objects, uniqueId } from "./object";
 
 import "./handlers/primitives";
 import "./handlers/object";
@@ -7,33 +7,46 @@ import "./handlers/function";
 import "./handlers/opaque";
 
 window._interop_js_ = {
-    registerLuaFunction(params: any[]) {
+    registerLuaFunction(params) {
         const [path, func] = params;
         const a = path.split(".");
         let o: any = window;
         while (a.length - 1) {
-            const n = a.shift();
+            const n = a.shift() as string;
             if (!(n in o)) o[n] = {};
             o = o[n];
         }
         o[a[0]] = fromLua(func);
     },
-    collect(params: any[]) {
+    collect(params) {
         const [id] = params;
         // Delete the object with the given ID
         delete objects[id];
     },
-    call(params: any[]) {
-        const [id, ...args] = params;
-        const func = objects[id] as Function;
+    returnValue(params) {
+        const [callId, success, value] = params;
+        if (callId in callbacks) {
+            callbacks[callId](success, fromLua(value));
+            delete callbacks[callId];
+        }
+    },
+    async call(params) {
+        const [id, callId, ...args] = params;
+        const func = objects[id] as (...args: any[]) => any;
         if (typeof func !== "function") {
             throw new Error(`Object with ID ${id} is not a function`);
         }
-        return func(...args.map(fromLua));
+        try {
+            const ret = await func(...args.map(fromLua));
+            _interop_lua_.returnValue(callId, true, ret ? toLua(ret) : null);
+        } catch (e) {
+            _interop_lua_.returnValue(callId, false, String(e));
+        }
     }
 }
 
 window.Interop = {
+    uniqueId,
     registerHandler,
     fromLua,
     toLua

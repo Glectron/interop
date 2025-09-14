@@ -1,7 +1,6 @@
 import { finalizationRegistry } from "../gc";
-import { registerHandler, toLua } from "../handler";
-import { createLuaObject, interopType, objects, wrappers } from "../object"
-import { randomString } from "../util";
+import { callbacks, registerHandler, toLua } from "../handler";
+import { createLuaObject, interopType, objects, uniqueId, wrappers } from "../object"
 
 const handler: Handler = {
     priority: 150,
@@ -14,11 +13,21 @@ const handler: Handler = {
             } else {
                 // A Lua function, wrap it
                 const func = function(...args: any[]) {
-                    const parameters = [];
+                    const parameters: any[] = [];
                     for (let i = 0;i<args.length;i++) {
                         parameters.push(toLua(args[i]));
                     }
-                    _interop_lua_.call(id, ...parameters);
+                    const callId = uniqueId();
+                    return new Promise((resolve, reject) => {
+                        callbacks[callId] = (success, result) => {
+                            if (success) {
+                                resolve(result);
+                            } else {
+                                reject(result);
+                            }
+                        }
+                        _interop_lua_.call(id, callId, ...parameters);
+                    });
                 };
                 wrappers.set(func, id);
                 finalizationRegistry.register(func, id);
@@ -36,7 +45,7 @@ const handler: Handler = {
                 });
             } else {
                 // A Javascript function, wrap it
-                const id = randomString(10);
+                const id = uniqueId();
                 objects[id] = obj;
                 return createLuaObject("function", { id });
             }
