@@ -7,8 +7,7 @@ import "./handlers/function";
 import "./handlers/opaque";
 
 window._interop_js_ = {
-    registerLuaFunction(params) {
-        const [path, func] = params;
+    registerLuaFunction(path, func) {
         const a = path.split(".");
         let o: any = window;
         while (a.length - 1) {
@@ -18,20 +17,17 @@ window._interop_js_ = {
         }
         o[a[0]] = fromLua(func);
     },
-    collect(params) {
-        const [id] = params;
+    collect(id) {
         // Delete the object with the given ID
         delete objects[id];
     },
-    returnValue(params) {
-        const [callId, success, value] = params;
+    returnValue(callId, success, value) {
         if (callId in callbacks) {
             callbacks[callId](success, fromLua(value));
             delete callbacks[callId];
         }
     },
-    async call(params) {
-        const [id, callId, ...args] = params;
+    async call(id, callId, ...args) {
         const func = objects[id] as (...args: any[]) => any;
         if (typeof func !== "function") {
             throw new Error(`Object with ID ${id} is not a function`);

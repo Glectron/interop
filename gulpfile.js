@@ -3,6 +3,24 @@ import fs from 'fs/promises';
 import { glob } from 'glob';
 import esbuild from 'esbuild';
 
+async function inlineIncludes(luaContent, baseDir = 'src/lua') {
+    const includeRegex = /--\s*@include\((.+?)\)\s*--/g;
+    let match;
+    let result = luaContent;
+    while ((match = includeRegex.exec(luaContent)) !== null) {
+        const includePath = match[1].trim();
+        const fullPath = `${baseDir}/${includePath}`;
+        let includedContent = '';
+        try {
+            includedContent = await fs.readFile(fullPath, 'utf8');
+        } catch (e) {
+            throw new Error(`Failed to include: ${includePath} (${fullPath})`);
+        }
+        result = result.replace(match[0], includedContent);
+    }
+    return result;
+}
+
 async function buildLua() {
     try {
         // Read all handler files
@@ -16,8 +34,11 @@ async function buildLua() {
         }
         
         // Read the main interop file
-        const interopContent = await fs.readFile('src/lua/interop.lua', 'utf8');
-        
+        let interopContent = await fs.readFile('src/lua/interop.lua', 'utf8');
+
+        // Inline includes
+        interopContent = await inlineIncludes(interopContent);
+
         // Replace the placeholder with handler contents
         const result = interopContent.replace('-- @HANDLER --', handlerContents.trim());
         

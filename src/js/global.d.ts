@@ -38,22 +38,22 @@ interface JSInterface {
      * Called by Lua to register a Lua function as a callable JavaScript function.
      * @param params Parameters
      */
-    registerLuaFunction(params: [path: string, func: FunctionInteropObject]): void;
+    registerLuaFunction(path: string, func: FunctionInteropObject): void;
     /**
      * Called by Lua to notify that a Lua object is no longer needed and can be garbage collected.
      * @param params Parameters
      */
-    collect(params: [id: string]): void;
+    collect(id: string): void;
     /**
      * Called by Lua to return a value from a previously called Lua function.
      * @param params Parameters
      */
-    returnValue(params: [callId: string, success: boolean, value: any]): void;
+    returnValue(callId: string, success: boolean, value: any): void;
     /**
      * Called by Lua to call a JavaScript function with the given ID and arguments.
      * @param params Parameters
      */
-    call(params: [func: string, callId: string, ...args: any[]]): any;
+    call(func: string, callId: string, ...args: any[]): any;
 }
 
 interface InteropInterface {

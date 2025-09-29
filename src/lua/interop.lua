@@ -2,13 +2,6 @@ local Interop = {}
 
 Interop.m_Handlers = {}
 
-Interop.m_Objects = {}
-Interop.m_Wrappers = {}
-
-local weak = {}
-weak.__mode = "k"
-setmetatable(Interop.m_Wrappers, weak)
-
 Interop.m_ReturnCallbacks = {}
 
 local function randomString(length)
@@ -27,68 +20,13 @@ function Interop:RegisterHandler(handler)
     table.sort(self.m_Handlers, function(a, b) return (a.Priority or 0) < (b.Priority or 0) end)
 end
 
-function Interop:CreatePromise()
-    local resolved = false
-    local rejected = false
-    local value = nil
-    local err = nil
-    local promise = {}
-    function promise:Then(onResolve)
-        if resolved then
-            if onResolve then onResolve(value) end
-        else
-            self._onResolve = onResolve
-        end
-        return self
-    end
-    function promise:Catch(onReject)
-        if rejected then
-            if onReject then onReject(err) end
-        else
-            self._onReject = onReject
-        end
-        return self
-    end
-    function promise:Final(onFinal)
-        if resolved or rejected then
-            if onFinal then onFinal() end
-        else
-            self._onFinal = onFinal
-        end
-        return self
-    end
-    function resolve(val)
-        if not resolved and not rejected then
-            resolved = true
-            value = val
-            if promise._onResolve then
-                promise._onResolve(value)
-            end
-            if promise._onFinal then
-                promise._onFinal()
-            end
-        end
-    end
-    function reject(e)
-        if not resolved and not rejected then
-            rejected = true
-            err = e
-            if promise._onReject then
-                promise._onReject(err)
-            end
-            if promise._onFinal then
-                promise._onFinal()
-            end
-        end
-    end
-    return promise, resolve, reject
-end
+-- @include(promise.lua) --
 
 -- Call when document ready.
 function Interop:AttachToDHTML(dhtml)
     self.m_DHTML = dhtml
     dhtml:AddFunction("_interop_lua_", "call", function(id, callId, ...)
-        local func = self.m_Objects[id]
+        local func = self:GetObject(id)
         if type(func) ~= "function" then
             error("Invalid function ID")
         end
@@ -115,8 +53,7 @@ function Interop:AttachToDHTML(dhtml)
         end
     end)
     dhtml:AddFunction("_interop_lua_", "collect", function(id)
-        self.m_Objects[id] = nil
-        collectgarbage()
+        self:OnCollect(id)
     end)
 end
 
@@ -127,11 +64,11 @@ end
 function Interop:BuildJavascriptCallSignature(func, ...)
     local parameters = {...}
     local p = {}
-    for _,v in ipairs(parameters) do
+    for _, v in ipairs(parameters) do
         table.insert(p, self:ToJavascript(v))
     end
     local json = util.TableToJSON(p)
-    return string.format("%s(%s)", func, json)
+    return string.format("%s(...%s)", func, json)
 end
 
 function Interop:RunJavascriptFunction(func, ...)
@@ -143,23 +80,10 @@ function Interop:AddFunction(path, callback)
     self:RunJavascriptFunction("_interop_js_.registerLuaFunction", path, callback)
 end
 
-function Interop:Collect(id)
-    self:RunJavascriptFunction("_interop_js_.collect", id)
-end
-
-function Interop:CreateJavascriptObject(type, obj)
-    obj._G_InteropType = type
-    return obj
-end
-
-function Interop:ObjectType(obj)
-    if type(obj) ~= "table" then return nil end
-    return obj._G_InteropType
-end
-
-function Interop:FromJavascript(obj)
+function Interop:FromJavascript(obj, context)
+    context = context or {}
     for _, handler in ipairs(self.m_Handlers) do
-        local result = handler:From(obj)
+        local result = handler:From(obj, context)
         if result ~= nil then
             return result
         end
@@ -167,9 +91,10 @@ function Interop:FromJavascript(obj)
     return nil
 end
 
-function Interop:ToJavascript(obj)
+function Interop:ToJavascript(obj, context)
+    context = context or {}
     for _, handler in ipairs(self.m_Handlers) do
-        local result = handler:To(obj)
+        local result = handler:To(obj, context)
         if result ~= nil then
             return result
         end
@@ -177,16 +102,7 @@ function Interop:ToJavascript(obj)
     return nil
 end
 
-function Interop:ListenForGC(obj, callback)
-    local p = newproxy(true)
-    local pmeta = getmetatable(p)
-    function pmeta:__gc()
-        callback()
-    end
-    local meta = getmetatable(obj) or {}
-    meta["_g_gc_proxy"] = p
-    setmetatable(obj, meta)
-end
+-- @include(objects.lua) --
 
 -- @HANDLER --
 

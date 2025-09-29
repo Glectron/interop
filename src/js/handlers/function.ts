@@ -12,8 +12,13 @@ const handler: Handler = {
                 return objects[id];
             } else {
                 // A Lua function, wrap it
+                const selfObj = (obj as any).selfObj;
                 const func = function(...args: any[]) {
                     const parameters: any[] = [];
+                    if (selfObj) {
+                        // If the function uses self, pass the self object as the first parameter
+                        parameters.push(createLuaObject("table", { id: selfObj }));
+                    }
                     for (let i = 0;i<args.length;i++) {
                         parameters.push(toLua(args[i]));
                     }

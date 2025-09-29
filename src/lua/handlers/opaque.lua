@@ -5,9 +5,10 @@ HANDLER.Priority = 200
 function HANDLER:From(obj)
     if Interop:ObjectType(obj) == "opaque" then
         local id = obj.id
-        if Interop.m_Objects[id] then
+        local object = Interop:GetObject(id)
+        if object then
             -- Lua's opaque object, return it
-            return Interop.m_Objects[id]
+            return object
         else
             -- Javascript's opaque object, notify JS if collected
             Interop:ListenForGC(obj, function()
@@ -26,6 +27,6 @@ function HANDLER:To(obj)
     end
     -- Lua's opaque object, create an interop object
     local id = Interop:UniqueID()
-    Interop.m_Objects[id] = obj
-    return Interop:CreateJavascriptObject("opaque", { id = id })
+    Interop:RegisterObject(id, obj)
+    return Interop:CreateObject("opaque", { id = id })
 end
