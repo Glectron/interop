@@ -1,6 +1,6 @@
 local HANDLER = {}
 
-HANDLER.Priority = 10
+HANDLER.Priority = 20
 
 function HANDLER:From(obj)
     -- Convert from primitive types to themselves

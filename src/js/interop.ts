@@ -1,6 +1,7 @@
 import { fromLua, toLua, registerHandler, callbacks } from "./handler";
 import { objects, uniqueId } from "./object";
 
+import "./handlers/binary";
 import "./handlers/primitives";
 import "./handlers/object";
 import "./handlers/function";
