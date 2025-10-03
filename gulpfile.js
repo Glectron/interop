@@ -63,7 +63,7 @@ async function buildTypeScript() {
             outfile: 'build/interop.js',
             platform: 'browser',
             target: 'es2021',
-            format: 'cjs',
+            format: 'iife',
             sourcemap: true,
             minify: false
         });
