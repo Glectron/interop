@@ -8,7 +8,7 @@ export function uniqueId(): string {
 }
 
 export function interopType(obj: any): string | null {
-    if (typeof obj === "object" && "_G_InteropType" in obj) {
+    if (obj !== null && typeof obj === "object" && "_G_InteropType" in obj) {
         return (obj as any)._G_InteropType;
     }
     return null;
