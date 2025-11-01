@@ -84,20 +84,7 @@ function Interop:UniqueID()
     return randomString(6)
 end
 
-function Interop:BuildJavascriptCallSignature(func, ...)
-    local parameters = {...}
-    local p = {}
-    for _, v in ipairs(parameters) do
-        table_insert(p, self:ToJavascript(v))
-    end
-    local json = util_TableToJSON(p)
-    return string_format("%s(...%s)", func, json)
-end
-
-function Interop:RunJavascriptFunction(func, ...)
-    if not self.m_DHTML then return end
-    self.m_DHTML:RunJavascript(self:BuildJavascriptCallSignature(func, ...))
-end
+-- @include(javascript.lua) --
 
 function Interop:AddFunction(path, callback)
     self:RunJavascriptFunction("_interop_js_.registerLuaFunction", path, callback)
