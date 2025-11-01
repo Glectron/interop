@@ -4,15 +4,29 @@ Interop.m_Handlers = {}
 
 Interop.m_ReturnCallbacks = {}
 
+local type = type
+local ipairs = ipairs
+local xpcall = xpcall
+local math_random = math.random
+local table_concat = table.concat
+local table_insert = table.insert
+local util_TableToJSON = util.TableToJSON
+local string_format = string.format
+
+local characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+local charactersLength = #characters
+local charArray = {}
+for i = 1, charactersLength do
+    charArray[i] = characters:sub(i, i)
+end
+
 local function randomString(length)
-    local result = ""
-    local characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    local charactersLength = #characters
+    local t = {}
     for i = 1, length do
-        local index = math.random(1, charactersLength)
-        result = result .. characters:sub(index, index)
+        local index = math_random(1, charactersLength)
+        t[i] = charArray[index]
     end
-    return result
+    return table_concat(t)
 end
 
 function Interop:RegisterHandler(handler)
@@ -24,6 +38,7 @@ end
 
 -- Call when document ready.
 function Interop:AttachToDHTML(dhtml)
+    self:Reset()
     self.m_DHTML = dhtml
     dhtml:AddFunction("_interop_lua_", "call", function(id, callId, ...)
         local func = self:GetObject(id)
@@ -33,7 +48,7 @@ function Interop:AttachToDHTML(dhtml)
         local parameters = {...}
         local p = {}
         for _,v in ipairs(parameters) do
-            table.insert(p, self:FromJavascript(v))
+            table_insert(p, self:FromJavascript(v))
         end
         local function cb(success, result)
             self:RunJavascriptFunction("_interop_js_.returnValue", callId, success, result)
@@ -57,18 +72,26 @@ function Interop:AttachToDHTML(dhtml)
     end)
 end
 
+function Interop:Reset()
+    self.m_ReturnCallbacks = {}
+
+    self.m_Objects = {}
+    self.m_RefCount = {}
+    self.m_Wrappers = {}
+end
+
 function Interop:UniqueID()
-    return randomString(10)
+    return randomString(6)
 end
 
 function Interop:BuildJavascriptCallSignature(func, ...)
     local parameters = {...}
     local p = {}
     for _, v in ipairs(parameters) do
-        table.insert(p, self:ToJavascript(v))
+        table_insert(p, self:ToJavascript(v))
     end
-    local json = util.TableToJSON(p)
-    return string.format("%s(...%s)", func, json)
+    local json = util_TableToJSON(p)
+    return string_format("%s(...%s)", func, json)
 end
 
 function Interop:RunJavascriptFunction(func, ...)

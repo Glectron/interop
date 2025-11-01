@@ -4,7 +4,7 @@ export const objects: Record<string, object> = {}
 export const wrappers = new WeakMap<object, string>();
 
 export function uniqueId(): string {
-    return randomString(10);
+    return randomString(6);
 }
 
 export function interopType(obj: any): string | null {
