@@ -21,30 +21,23 @@ end
 
 function HANDLER:To(obj)
     if type(obj) == "table" and not Interop:ObjectType(obj) then
-        if table.IsSequential(obj) then
-            -- Can't put metadata in sequential tables...
-            local newTbl = {}
-            for k, v in ipairs(obj) do
-                newTbl[k] = Interop:ObjectType(v) and v or Interop:ToJavascript(v, context)
-            end
-            return newTbl
-        else
-            local objId = Interop:UniqueID()
-            local newTbl = Interop:CreateObject("table", {
-                _G_TableId = objId
-            })
-            local context = {
-                parentTable = objId
-            }
-            for k, v in pairs(obj) do
-                newTbl[k] = Interop:ObjectType(v) and v or Interop:ToJavascript(v, context)
-            end
-            if Interop:IsObjectReferenced(objId) then
-                Interop:RegisterObject(objId, obj)
-                Interop:RefObject(objId) -- Count the table usage itself, so it doesn't get collected while in use
-            end
-            return newTbl
+        local objId = Interop:UniqueID()
+        local data = Interop:CreateObject("table", {
+            _G_TableId = objId
+        })
+        local context = {
+            parentTable = objId
+        }
+        local newTbl = {}
+        for k, v in pairs(obj) do
+            newTbl[k] = Interop:ObjectType(v) and v or Interop:ToJavascript(v, context)
         end
+        if Interop:IsObjectReferenced(objId) then
+            Interop:RegisterObject(objId, obj)
+            Interop:RefObject(objId) -- Count the table usage itself, so it doesn't get collected while in use
+        end
+        data.content = newTbl
+        return data
     end
 end
 

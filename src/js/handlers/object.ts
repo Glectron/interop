@@ -5,19 +5,14 @@ import { createLuaObject, interopType } from "../object";
 const handler: Handler = {
     priority: 100,
     from(obj: unknown): unknown {
-        if (typeof obj === "object") {
-            if (Array.isArray(obj)) {
-                const newArr = obj.map(item => fromLua(item));
-                return newArr;
-            } else if (interopType(obj) === "table") {
-                const newObj = {};
-                for (const k in obj) {
-                    const v = (obj as Record<any, any>)[k];
-                    (newObj as Record<any, any>)[k] = fromLua(v);
-                }
-                finalizationRegistry.register(newObj, (obj as any)._G_TableId);
-                return newObj;
+        if (interopType(obj) === "table") {
+            const newObj = {};
+            for (const k in (obj as Record<any, any>).content) {
+                const v = (obj as Record<any, any>).content[k];
+                (newObj as Record<any, any>)[k] = fromLua(v);
             }
+            finalizationRegistry.register(newObj, (obj as any)._G_TableId);
+            return newObj;
         }
         return undefined;
     },
