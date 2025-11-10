@@ -6,7 +6,7 @@ const handler: Handler = {
     priority: 100,
     from(obj: unknown): unknown {
         if (interopType(obj) === "table") {
-            const newObj = {};
+            const newObj = Array.isArray((obj as Record<any, any>).content) ? [] : {};
             for (const k in (obj as Record<any, any>).content) {
                 const v = (obj as Record<any, any>).content[k];
                 (newObj as Record<any, any>)[k] = fromLua(v);
