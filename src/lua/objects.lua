@@ -11,8 +11,8 @@ function Interop:ObjectType(obj)
     return obj._G_InteropType
 end
 
-function Interop:CreateObject(type, obj)
-    obj._G_InteropType = type
+function Interop:CreateObject(typ, obj)
+    obj._G_InteropType = typ
     return obj
 end
 
@@ -77,18 +77,17 @@ function Interop:ListenForGC(obj, callback)
 end
 
 function Interop:RefObject(id)
-    if not self.m_RefCount[id] then
-        self.m_RefCount[id] = 0
-    end
-    self.m_RefCount[id] = self.m_RefCount[id] + 1
+    local refCntTbl = self.m_RefCount
+    refCntTbl[id] = (refCntTbl[id] or 0) + 1
 end
 
 -- Returns true if the object was unreferenced (ref count reached 0)
 function Interop:UnrefObject(id)
-    if self.m_RefCount[id] then
-        self.m_RefCount[id] = self.m_RefCount[id] - 1
-        if self.m_RefCount[id] <= 0 then
-            self.m_RefCount[id] = nil
+    local refCntTbl = self.m_RefCount
+    if refCntTbl[id] then
+        refCntTbl[id] = refCntTbl - 1
+        if refCntTbl[id] <= 0 then
+            refCntTbl[id] = nil
             return true
         end
     elseif self.m_Objects[id] then

@@ -4,13 +4,13 @@ HANDLER.Priority = 150
 
 function HANDLER:UsesSelf(func)
     -- Get function info (ensure it's a Lua function, not C)
-    local info = debug.getinfo(func, "Su")
+    local info = debug_getinfo(func, "Su")
     if not info or info.what ~= "Lua" then
         return false  -- C functions or no debug info
     end
 
     -- Check the first parameter's name
-    local param1 = debug.getlocal(func, 1)
+    local param1 = debug_getlocal(func, 1)
     return param1 == "self"
 end
 
@@ -56,10 +56,11 @@ function HANDLER:To(obj, context)
             local id = Interop:UniqueID()
             local data = { id = id }
             local objData = { }
-            if context.parentTable and self:UsesSelf(obj) then
-                data.selfObj = context.parentTable
-                objData.selfObj = context.parentTable -- Keep a reference to the parent table for OnCollect
-                Interop:RefObject(context.parentTable)
+            local parent = context.parentTable
+            if parent and self:UsesSelf(obj) then
+                data.selfObj = parent
+                objData.selfObj = parent -- Keep a reference to the parent table for OnCollect
+                Interop:RefObject(parent)
             end
             Interop:RegisterObject(id, obj, objData)
             return Interop:CreateObject("function", data)

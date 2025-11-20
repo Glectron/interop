@@ -4,14 +4,7 @@ Interop.m_Handlers = {}
 
 Interop.m_ReturnCallbacks = {}
 
-local type = type
-local ipairs = ipairs
-local xpcall = xpcall
-local math_random = math.random
-local table_concat = table.concat
-local table_insert = table.insert
-local util_TableToJSON = util.TableToJSON
-local string_format = string.format
+-- @include(localize.lua) --
 
 local characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 local charactersLength = #characters
@@ -30,8 +23,8 @@ local function randomString(length)
 end
 
 function Interop:RegisterHandler(handler)
-    table.insert(self.m_Handlers, handler)
-    table.sort(self.m_Handlers, function(a, b) return (a.Priority or 0) < (b.Priority or 0) end)
+    table_insert(self.m_Handlers, handler)
+    table_sort(self.m_Handlers, function(a, b) return (a.Priority or 0) < (b.Priority or 0) end)
 end
 
 -- @include(promise.lua) --
@@ -47,7 +40,7 @@ function Interop:AttachToDHTML(dhtml)
         end
         local parameters = {...}
         local p = {}
-        for _,v in ipairs(parameters) do
+        for _, v in ipairs(parameters) do
             table_insert(p, self:FromJavascript(v))
         end
         local function cb(success, result)
@@ -61,10 +54,11 @@ function Interop:AttachToDHTML(dhtml)
         end
     end)
     dhtml:AddFunction("_interop_lua_", "returnValue", function(callId, success, value)
-        local cb = self.m_ReturnCallbacks[callId]
+        local cbTbl = self.m_ReturnCallbacks
+        local cb = cbTbl[callId]
         if cb then
             cb(success, self:FromJavascript(value))
-            self.m_ReturnCallbacks[callId] = nil
+            cbTbl[callId] = nil
         end
     end)
     dhtml:AddFunction("_interop_lua_", "collect", function(id)
@@ -73,6 +67,8 @@ function Interop:AttachToDHTML(dhtml)
 end
 
 function Interop:Reset()
+    self.m_JavascriptQueue = nil
+
     self.m_ReturnCallbacks = {}
 
     self.m_Objects = {}

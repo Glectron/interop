@@ -9,19 +9,23 @@ function Interop:CancelTransaction()
 end
 
 function Interop:EndTransaction()
-    if not self.m_JavascriptQueue then return end
-    local js = "{" .. table_concat(self.m_JavascriptQueue, "}{") .. "}"
+    local queue = self.m_JavascriptQueue
+    if not queue then return end
+    local js = "{" .. table_concat(queue, "}{") .. "}"
     self.m_JavascriptQueue = nil
-    if not self.m_DHTML then return end
-    self.m_DHTML:RunJavascript(js)
+    local dhtml = self.m_DHTML
+    if not IsValid(dhtml) then return end
+    dhtml:RunJavascript(js)
 end
 
 function Interop:RunJavascript(js)
-    if self.m_JavascriptQueue then
-        table_insert(self.m_JavascriptQueue, js)
+    local queue = self.m_JavascriptQueue
+    if queue then
+        table_insert(queue, js)
     else
-        if not self.m_DHTML then return end
-        self.m_DHTML:RunJavascript(js)
+        local dhtml = self.m_DHTML
+        if not IsValid(dhtml) then return end
+        dhtml:RunJavascript(js)
     end
 end
 

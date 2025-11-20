@@ -2,6 +2,7 @@ import gulp from 'gulp';
 import fs from 'fs/promises';
 import { glob } from 'glob';
 import esbuild from 'esbuild';
+import luamin from 'luamin';
 
 async function inlineIncludes(luaContent, baseDir = 'src/lua') {
     const includeRegex = /--\s*@include\((.+?)\)\s*--/g;
@@ -16,7 +17,7 @@ async function inlineIncludes(luaContent, baseDir = 'src/lua') {
         } catch (e) {
             throw new Error(`Failed to include: ${includePath} (${fullPath})`);
         }
-        result = result.replace(match[0], includedContent);
+        result = result.replace(match[0], includedContent.trim());
     }
     return result;
 }
@@ -30,7 +31,7 @@ async function buildLua() {
         let handlerContents = '';
         for (const file of handlerFiles) {
             const content = await fs.readFile(file, 'utf8');
-            handlerContents += content + '\n';
+            handlerContents += '\n' + content.trim() + '\n';
         }
         
         // Read the main interop file
@@ -47,8 +48,16 @@ async function buildLua() {
         
         // Write the result
         await fs.writeFile('build/interop.lua', result);
+
+        console.log('✓ Built interop.lua');
+
+        // Build a minified version
+        const minified = luamin.minify(result);
+
+        // Write the minified result
+        await fs.writeFile('build/interop.min.lua', minified);
         
-        console.log('✓ Built interop.lua with handlers');
+        console.log('✓ Built interop.min.lua');
     } catch (error) {
         console.error('Build failed:', error);
         throw error;
@@ -69,6 +78,19 @@ async function buildTypeScript() {
         });
         
         console.log('✓ Built interop.js from TypeScript');
+
+        await esbuild.build({
+            entryPoints: ['src/js/interop.ts'],
+            bundle: true,
+            outfile: 'build/interop.min.js',
+            platform: 'browser',
+            target: 'es2021',
+            format: 'iife',
+            sourcemap: true,
+            minify: true
+        });
+
+        console.log('✓ Built interop.min.js from TypeScript');
     } catch (error) {
         console.error('TypeScript build failed:', error);
         throw error;

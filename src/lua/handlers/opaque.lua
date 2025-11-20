@@ -30,3 +30,5 @@ function HANDLER:To(obj)
     Interop:RegisterObject(id, obj)
     return Interop:CreateObject("opaque", { id = id })
 end
+
+Interop:RegisterHandler(HANDLER)

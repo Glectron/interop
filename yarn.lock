@@ -994,6 +994,18 @@ lru-queue@^0.1.0:
   dependencies:
     es5-ext "~0.10.2"
 
+luamin@^1.0.4:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/luamin/-/luamin-1.0.4.tgz#944529b58fc6fa4d31eace2e0353d41210f0e3d3"
+  integrity sha512-z1h0bclRD/QGsS/Dz4Skp9z0qPTmmm+IKcrCapGmdTczPWVdN9f9jk6WqkNrcifQr8+n9Pzsm9WkwpOH1JBUAQ==
+  dependencies:
+    luaparse "^0.2.1"
+
+luaparse@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/luaparse/-/luaparse-0.2.1.tgz#aa8f56132b0de97d37f3c991a9df42e0e17f656c"
+  integrity sha512-VKBcryd5nJte4ZNR29NOk8F/UkMipjeb4yoxcSS51z6QAzg9DXUC2WsfLniS0J1eh3pr/ZL3e9ha6V8fhoLbBQ==
+
 map-cache@^0.2.0:
   version "0.2.2"
   resolved "https://registry.npmjs.org/map-cache/-/map-cache-0.2.2.tgz"
