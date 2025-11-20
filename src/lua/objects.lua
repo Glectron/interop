@@ -85,7 +85,7 @@ end
 function Interop:UnrefObject(id)
     local refCntTbl = self.m_RefCount
     if refCntTbl[id] then
-        refCntTbl[id] = refCntTbl - 1
+        refCntTbl[id] = refCntTbl[id] - 1
         if refCntTbl[id] <= 0 then
             refCntTbl[id] = nil
             return true
